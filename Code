@@ -1,8 +1,6 @@
-#reading file 
-
-shark = read.csv("C:/Users/bhavv/OneDrive/Desktop/MMA2/Multivariate Statcl Analysis- Juan Serpa/FINAL PROJECT-SHARK TANK/SharkTank_Dataset_new-catChanges.csv")
-
-attach(shark)
+shark_cat = read.csv("C:/Users/Katia/Desktop/MMA/Multivariate Statis/SharkTank_cat1.csv")
+shark_cat = SharkTank_correct
+attach(shark_cat)
 
 #STEP - 1
 #### plotting each variable individually to look for its distribution ####
@@ -12,15 +10,18 @@ ggplot(shark, aes(x=deal)) + geom_histogram()+ggtitle("Scatterplot of whether a 
 ggplot(shark, aes(x=deal)) + geom_histogram(color='black',fill='darkblue',stat='count')+labs(title="Histogram of deal repartition",y='count',x='output of a deal')
 #50% chance to see your project finance by the sharks
 
+hist(episode)
 ggplot(shark, aes(x=episode)) + geom_histogram(color='black',fill='darkblue',binwidth = 1)+ggtitle("Histogram of episodes")+labs(y='count',x='number of episodes')
-# more episodes for later seasons #
+# more episodes for later seasons.
 
 ggplot(shark, aes(x=gender,color=gender)) + geom_histogram(color='black',fill='darkblue',binwidth = 1,stat='count')+labs(title="Histogram of gender repartition",y='count',x='type of gender per team')
 #more males' teams
 
 summary(location)
+#Top 5: Los Angeles, CA, New York, NY, San Francisco, CA, Chicago, IL, Austin, TX 
 
-summary(catChanges)
+ggplot(shark, aes(x=askedFor)) + geom_histogram(color='black',fill='darkblue')+ggtitle("Histogram of the amount of money asked by entrepreneurs")+labs(y='count',x='amount of money asked')
+#entrepreneurs ask in general less than X amount of money
 
 ggplot(shark, aes(x=exchangeForStake)) + geom_histogram(color='black',fill='darkblue')+ggtitle("Histogram of the percentage of equity entrepreneurs are willing to share with shark")+labs(y='count',x='percentage of equity shared')
 #entrepreneurs shares in general less 50% than equity
@@ -40,7 +41,7 @@ ggplot(shark, aes(x=implied.valuation)) + geom_histogram(color='black',fill='dar
 
 library(psych)
 
-quantvars = shark[,c(3,4,10,11,12,13,14,15,26,27,28,29,30,31)]
+quantvars = shark_cat[,c(3,4,14,15,16,17,26,27,28,29)]
 
 pairs.panels(quantvars)
 
@@ -62,192 +63,300 @@ pairs.panels(quantvars)
 # #
 
 #RANDOM FOREST
-# library(tree)
-# library(rpart)
-# library(rpart.plot)
-# 
-# rf=rpart(deal~episode+category+gender+location+askedFor+exchangeForStake+valuation+season+episode.season+still.open+investment.received+in.exchange.for+implied.valuation, cp=0.01)
-# 
-# summary(rf)
-# 
-# 
-# mylargetree$cptable[which.min(mylargetree$cptable[,"xerror"]),"CP"]
-# 
-# 
-# 
-# #tree with existing features
-# 
-# mytree=rpart(deal~episode+category+gender+location+askedFor+exchangeForStake+valuation+season+year+gdp_growth+still.open+investment.received+in.exchange.for+implied.valuation+dif_investment+dif_equity+dif_valuation,control=rpart.control(cp=0.000000001))
-# 
-# rpart.plot(mytree)
-# 
-# #calculation best cp value
-# mytree$cptable[which.min(mytree$cptable[,"xerror"]),"CP"] 
-# 
-# #new tree with cp 0.000978
-# mytree_new=rpart(deal~episode+category+gender+location+askedFor+exchangeForStake+valuation+season+year+gdp_growth+still.open+investment.received+in.exchange.for+implied.valuation+dif_investment+dif_equity+dif_valuation,control=rpart.control(cp=0.000978))
-# 
-# rpart.plot(mytree_new)
-# #if the investment received by the entrepreneurs is less than 12K then 49%\
-# #????
-# 
-# #random forest feature selection
-# library(randomForest)
-# 
-# #omitting nulls, if any, before random forest model 
-# shark <- na.omit(shark)
-# 
-# 
-# #H
-# myforest_t = randomForest(deal~episode+category+gender+location+askedFor+exchangeForStake+valuation+season+year+gdp_growth+still.open+investment.received+in.exchange.for+implied.valuation+dif_investment+dif_equity+dif_valuation,ntree=10000,data=shark,do.trace=1000,importance=TRUE)
-# 
-# #I
-# 
-# myforest_t
-# varImpPlot(myforest_t)
+library(tree)
+library(rpart)
+library(rpart.plot)
+
+rf=rpart(still.open~catChanges+gender+exchangeForStake+valuation+deal+in.exchange.for+implied.valuation, cp=0.01)
+rf1=rpart(still.open~catChanges+state+gender+exchangeForStake+valuation+deal+in.exchange.for+implied.valuation, cp=0.01)
+
+summary(rf)
+rpart.plot(rf)
+rpart.plot(rf1)
+mylargetree$cptable[which.min(mylargetree$cptable[,"xerror"]),"CP"] 
+
+# we deleted Copa di ViNo
+#we deleted Echo Valley Meats
+
+############# Clustering
+
+#######K-Means clustering gender and equity
+shark_clustering = shark_cat[c(9,14)]
+rownames(shark_clustering)=shark_cat$title
+plot(shark_clustering)
+na.omit(shark_clustering)
+km.3=kmeans(shark_clustering,3)
+plot(shark_clustering,col=(km.3$cluster))
+
+#######K-Means clustering gender and valuation
+shark_clustering = shark_cat[c(9,15)]
+rownames(shark_clustering)=shark_cat$title
+plot(shark_clustering)
+km.3=kmeans(na.omit(shark_clustering),3)
+plot(shark_clustering,col=(km.3$cluster))
+
+#######K-Means clustering len decription and valuation
+shark_clustering = shark_cat[c(3,15)]
+rownames(shark_clustering)=shark_cat$title
+plot(shark_clustering)
+km.3=kmeans(shark_clustering,3)
+plot(shark_clustering,col=(km.3$cluster))
+
+#######K-Means clustering year and valuation
+shark_clustering = shark_cat[c(17,15)]
+rownames(shark_clustering)=shark_cat$title
+plot(shark_clustering)
+km.3=kmeans(shark_clustering,3)
+plot(shark_clustering,col=(km.3$cluster))
 
 
-######PCA - for correlated 
-#non - dummified - involving everything 
-#####################################################
-survival = as.factor(still.open)
-table(still.open)
-attach(shark)
+###################################################
 
-shark$survival=ifelse(still.open=="Yes",1,0)
-attach(shark)
+# Use LOOCV test to test overfitting and find smallest mse with glm code
 
-vars = shark[,c(3,4,9,13,14,15,16,26,27,28,29,30)]
+######################LINEAR DISCRIMINANT
 
-#G
-pca = prcomp(vars,scale=TRUE)
-
-pca
-
-#I
-install.packages("ggplot2")
-install.packages("ggfortify")
-library(ggplot2)
-library(ggfortify)
-
-autoplot(pca, data = vars, loadings = TRUE, loadings.label = TRUE,col=ifelse(vars$survival==1,"blue","pink"))
-
-
-# ######PCA - for correlated 
-# #dummified one
-# #dropping categorical columns - involving everything 
-# #####################################################
-# library(dplyr)
-# shark_data <- shark
-# 
-# shark_data = select(shark_data,-c(2,5,6,7,8,9,14,15,16,17,18,19,20,21,22,23))
-# 
-# #G
-# pca = prcomp(shark_data,scale=TRUE)
-# 
-# pca
-# 
-# #I
-# install.packages("ggplot2")
-# install.packages("ggfortify")
-# library(ggplot2)
-# library(ggfortify)
-# 
-# autoplot(pca, data = shark_data, loadings = TRUE, loadings.label = TRUE,col=ifelse(shark_data$deal=="TRUE","blue","pink"))
-
-####PCA 
-######only with state
-#################################################
-
-
-shark_state = read.csv("C:/Users/bhavv/OneDrive/Desktop/MMA2/Multivariate Statcl Analysis- Juan Serpa/FINAL PROJECT-SHARK TANK/SharkTank_Dataset_new-catChanges-statedummy.csv")
-
-attach(shark_state)
-
-survival = as.factor(still.open)
+attach(shark_cat)
+shark_cat$still.open=as.factor(shark_cat$still.open) #  transform character in other tupe helping to plot
 table(still.open)
 
-shark_state$survival=ifelse(still.open=="Yes",1,0)
-attach(shark_state)
+attach(shark_cat)
+plot(shark_cat$still.open,shark_cat$valuation)
+table(still.open)
 
-library(dplyr)
-shark_data_l <- shark_state
+shark_cat$survival=ifelse(still.open=="Yes",1,0)
+attach(shark_cat)
+#na.omit(shark_new)
+table (shark_cat$survival)
 
-#removing cat variables 
-shark_data_l = select(shark_data_l,-c(1,2,5,6,7,8,10,11,12,17,18,19,20,21,22,23,24,25,27))
+###prior probabilities###
+pi_false = 134/493  #27.18%
+pi_true= 359/493    #72.81%
 
-#G
-pca = prcomp(shark_data_l,scale=TRUE)
+###probability density functions###
+#par(mfrow=c(2,1))
+#f_false=hist(valuation[survival=="FALSE"], col="Green")
+#f_true=hist(valuation[survival=="TRUE"], col="blue")
 
-pca
+install.packages("MASS")
+install.packages("klaR")
+library(MASS)
+library(klaR)
+
+#LDA Assumption of independant variables = continuous
+set.seed(123)
+install.packages("tidyverse")
+install.packages("caret")
+library(tidyverse)
+library(caret)
+
+#Split the data
+training.sample = createDataPartition(shark_cat$survival,p=0.8,list=FALSE)
+train.data = shark_cat[training.sample,]
+test.data = shark_cat[-training.sample,]
+#Normalize data
+preproc.param = preProcess(train.data,method=c("center","scale"))
+train.transformed = predict(preproc.param,train.data)
+test.transformed = predict(preproc.param,test.data)
+
+#fit the model
+model_lda = lda(survival~valuation,data=train.transformed)
+#prediction
+prediction_lda=predict(model_lda,test.transformed)
+prediction_lda
+#model accuracy
+mean(prediction_lda$class==test.transformed$survival)
+#71.42%
+
+#LDA
+model_lda1 = lda(survival~valuation+exchangeForStake+len_desc,data = train.transformed)
+model_lda1
+plot(model_lda)
+#visuals
+lda.data = cbind(train.transformed,predict(model_lda1)$x)
+ggplot(lda.data,aes(LD1,len_desc))+geom_point(aes(color=still.open))
+ggplot(lda.data,aes(LD1,valuation))+geom_point(aes(color=still.open))
+ggplot(lda.data,aes(LD1,exchangeForStake))+geom_point(aes(color=still.open))
+
+#prediction
+prediction_lda1=predict(model_lda1,test.transformed)
+prediction_lda1
+#model accuracy
+mean(prediction_lda1$class==test.transformed$survival)
+#68.36%
+########################################3
+mylda=lda(survival~valuation)
+mylda
+# Stargazer output
+install.packages('stargazer')
+library(stargazer)
+stargazer(mylda, type='html')
+
+#predictions
+
+predict(mylda,data.frame(valuation=5000))  #70.51%
+predict(mylda,data.frame(valuation=50000))   #70.56%
+predict(mylda,data.frame(valuation=500000))   #71.10%
+predict(mylda,data.frame(valuation=5000000))   #76.13%
 
 
-autoplot(pca, data = shark_data_l, loadings = TRUE, loadings.label = TRUE,col=ifelse(shark_data_l$survival==1,"blue","pink"))
+####linear discriminant analysis with more than one predictor
+mylda2=lda(still.open~valuation+len_desc)
+mylda2
+
+predict(mylda2,data.frame(valuation=5000,len_desc=20))  #60.86%
+predict(mylda2,data.frame(valuation=5000,len_desc=60))  #63.09%
+predict(mylda2,data.frame(valuation=5000,len_desc=150)) #67.90%
+predict(mylda2,data.frame(valuation=5000,len_desc=200)) #70.42%
+predict(mylda2,data.frame(valuation=5000,len_desc=1000)) #94.05%
 
 
-# ####PCA 
-# ######only with categories 
-# #################################################
-# 
-# library(dplyr)
-# shark_data_s <- shark
-# 
-# shark_data_s = select(shark_data_s,-c(2,5,6,7,8,9,14,15,16,17,18,19,20,21,22,23))
-# shark_data_s = select(shark_data_s,-starts_with("state"))
-# 
-# 
-# #G
-# pca = prcomp(shark_data_s,scale=TRUE)
-# 
-# pca
-# 
-# #I
-# install.packages("ggplot2")
-# install.packages("ggfortify")
-# library(ggplot2)
-# library(ggfortify)
-# 
-# autoplot(pca, data = shark_data_s, loadings = TRUE, loadings.label = TRUE,col=ifelse(shark_data_s$deal=="TRUE","blue","pink"))
-# 
+# for all observations
+predict(mylda2)
+######################################
+###partition matrix
+par(mfrow=c(3,1))
+partimat(survival~valuation+len_desc, method="lda")
+partimat(survival~valuation+exchangeForStake, method="lda")
+partimat(survival~len_desc+exchangeForStake, method="lda")
+partimat(survival~valuation+len_desc+exchangeForStake, method="lda")
+# error rate = 26.4%
+
+####quadratic discriminant analysis with more than one predictor
+myqda2=qda(still.open~valuation+len_desc+exchangeForStake)
+myqda2
+
+predict(myqda2,data.frame(valuation=5000,len_desc=20,exchangeForStake=0,6))  #56.38%
+predict(myqda2,data.frame(valuation=5000,len_desc=60,exchangeForStake=0,2))  #56.37%
+predict(myqda2,data.frame(valuation=5000,len_desc=150,exchangeForStake=0,4)) #58.05%
+predict(myqda2,data.frame(valuation=5000,len_desc=200,exchangeForStake=0,6)) #59.97%
+predict(myqda2,data.frame(valuation=50000,len_desc=1000,exchangeForStake=0,2)) #99.67%
 
 
-#################################################################################################################################################PCA - for correlated 
-#dropping categorical columns - with only category changed column
-###########################################################################
-shark_catChanges = read.csv("C:/Users/bhavv/OneDrive/Desktop/MMA2/Multivariate Statcl Analysis- Juan Serpa/FINAL PROJECT-SHARK TANK/SharkTank_Dataset_new-catChanges-df.csv")
+# for all observations
+predict(myqda2)
 
-attach(shark_catChanges)
+###partition matrix
+partimat(survival~valuation+len_desc, method="qda")
+partimat(survival~valuation+exchangeForStake, method="qda")  
+partimat(survival~len_desc+exchangeForStake, method="qda") 
+#error rate = 24.7%
 
+#########################################LOGISTIC REG##################
+
+attach(shark_cat)
+names(shark_cat)
+survival = as.factor(still.open)
+table(still.open)
+#####data in inbalanced so we are going to under-sampling balance the dataset
+# by increasing the size of the abundant class
+
+#shark_cat$survival=ifelse(still.open=="Yes",1,0)
+#attach(shark_cat)
+#na.omit(shark_cat)
+#table (shark_cat$survival)
+#plot(valuation,survival,col="gray")
+
+#logistic regression
+names(shark_cat)
 survival = as.factor(still.open)
 table(still.open)
 
-shark_catChanges$survival=ifelse(still.open=="Yes",1,0)
-attach(shark_catChanges)
+#Balance the data with SMOTE
+install.packages("DMwR")
+library(DMwR)
+shark_balanced= SMOTE(still.open~.,shark_cat, perc.over=666,k=5,perc.under=100)
+table(shark_balanced$still.open)
+#Separate the data
+install.packages("InformationValue")
+library(InformationValue)
+library(caTools)
+data = sample.split(shark_balanced$still.open, SplitRatio = 0.7)
+train2 = subset(shark_balanced,data == TRUE)
+test2 = subset(shark_balanced,data == FALSE)
+#Normalize data
+#set.seed(123)
+#install.packages("tidyverse")
+#install.packages("caret")
+#library(tidyverse)
+#library(caret)
+#preproc.param = preProcess(train2,method=c("center","scale"))
+#train2.transformed = predict(preproc.param,train2)
+#test2.transformed = predict(preproc.param,test2)
+#add survival column
+train2$survival=ifelse(train2$still.open=="Yes",1,0)
+attach(train2)
+table (train2$survival)
 
-library(dplyr)
-shark_data_c <- shark_catChanges
+test2$survival=ifelse(test2$still.open=="Yes",1,0)
+attach(test2)
+table (test2$survival)
 
-#keeping numerical data and removing categorical columns
-shark_data_c = select(shark_data_c,-c(1,2,5,6,7,9,10,11,14,16,17,18,19,20,21,22,23,24,25,27))
+shark_balanced$survival=ifelse(shark_balanced$still.open=="Yes",1,0)
+attach(shark_balanced)
+table (shark_balanced$survival)
 
-#G
-pca = prcomp(shark_data_c,scale=TRUE)
+set.seed(123)
+logit_balanced = glm(survival~valuation,family="binomial", data = train2)
+pr = predict(logit_balanced,test2,type='response')
+misClassError(test2$survival,pr, threshold = 0.5)
+#0.4617
+summary(logit_balanced)
+install.packages("stargazer")
+library(stargazer)
+stargazer(logit_balanced, title="Logistic Regression Results",type = "html")
 
-pca
+############
+attach(train2)
+#predictions
+value=5000
+exp(coef(logit_balanced)[1]+coef(logit_balanced)[2]*value)/(1+exp(coef(logit_balanced)[1]+coef(logit_balanced)[2]*value))
+#40.86% of surviving after the show 
 
-#I
-install.packages("ggplot2")
-install.packages("ggfortify")
-library(ggplot2)
-library(ggfortify)
+value=50000
+exp(coef(logit_balanced)[1]+coef(logit_balanced)[2]*value)/(1+exp(coef(logit_balanced)[1]+coef(logit_balanced)[2]*value))
+#40.99% of surviving after the show 
 
-autoplot(pca, data = shark_data_c, loadings = TRUE, loadings.label = TRUE,col=ifelse(shark_data_c$survival==1,"blue","pink"))
+value=500000
+exp(coef(logit_balanced)[1]+coef(logit_balanced)[2]*value)/(1+exp(coef(logit_balanced)[1]+coef(logit_balanced)[2]*value))
+#42.27% of surviving after the show 
+
+value=5000000
+exp(coef(logit_balanced)[1]+coef(logit_balanced)[2]*value)/(1+exp(coef(logit_balanced)[1]+coef(logit_balanced)[2]*value))
+#55.33%  of surviving after the show 
+
+#multiple logistic regression
+mlogit=glm(survival~valuation+exchangeForStake+gender+len_desc+catChanges+Multiple.Entrepreneurs+website+region,family = "binomial",data = train2)
+summary(mlogit)
+library(stargazer)
+stargazer(mlogit, title="Multiple Logistic Regression Results",type = "html")
+
+#model accuracy
+pr = predict(mlogit,test2,type='response')
+misClassError(test2$survival,pr, threshold = 0.5)
+#0.2337
+
+library(caret)
+ctrl= trainControl(method = "boot", number = 160, savePredictions = TRUE)
+#ctrl= trainControl(method = "repeatedcv", number = 160, savePredictions = TRUE)
+#ctrl= trainControl(method = "LOOCV", number = 160, savePredictions = TRUE)
+
+mlogit_cv=train(survival~valuation+exchangeForStake+gender+len_desc+catChanges+Multiple.Entrepreneurs+website+region,family = "binomial",
+              method="glm",data = train2,trControl= ctrl,tuneLength=40)
+pred_cv= predict(mlogit_cv,newdata = test2)
+#test2 = na.omit(test2)
+misClassError(test2$survival,pred_cv)
 
 
+value_risky = data.frame(valuation=3000000, exchangeForStake=0.5,gender="F",len_desc=20,catChanges="Novelties",website="Yes",Multiple.Entrepreneurs="Yes",data = shark_balanced)
+prediction_risky = predict(mlogit,value_risky,type="response")
+#8.15%
+value_sure = data.frame(valuation=3000000, exchangeForStake=0.3,gender="F",len_desc=2000,catChanges="Pet Products",website="Yes",Multiple.Entrepreneurs="Yes",data = shark_balanced)
+prediction_sure = predict(mlogit,value_sure,type="response")
+#So a business is more likely to obtain a contract if : 99;9%
 
-
-
-
-
-
+#R squared in multiple logistic regression
+require(rms)
+mlogit2=lrm(survival~valuation+exchangeForStake+gender+len_desc+website+Multiple.Entrepreneurs+catChanges+region)
+mlogit2
 
