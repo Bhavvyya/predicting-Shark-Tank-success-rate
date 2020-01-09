@@ -1,0 +1,253 @@
+#reading file 
+
+shark = read.csv("C:/Users/bhavv/OneDrive/Desktop/MMA2/Multivariate Statcl Analysis- Juan Serpa/FINAL PROJECT-SHARK TANK/SharkTank_Dataset_new-catChanges.csv")
+
+attach(shark)
+
+#STEP - 1
+#### plotting each variable individually to look for its distribution ####
+
+library(ggplot2)
+ggplot(shark, aes(x=deal)) + geom_histogram()+ggtitle("Scatterplot of whether a deal is made or not")+labs(y='frequency of output',x='number of deals')
+ggplot(shark, aes(x=deal)) + geom_histogram(color='black',fill='darkblue',stat='count')+labs(title="Histogram of deal repartition",y='count',x='output of a deal')
+#50% chance to see your project finance by the sharks
+
+ggplot(shark, aes(x=episode)) + geom_histogram(color='black',fill='darkblue',binwidth = 1)+ggtitle("Histogram of episodes")+labs(y='count',x='number of episodes')
+# more episodes for later seasons #
+
+ggplot(shark, aes(x=gender,color=gender)) + geom_histogram(color='black',fill='darkblue',binwidth = 1,stat='count')+labs(title="Histogram of gender repartition",y='count',x='type of gender per team')
+#more males' teams
+
+summary(location)
+
+summary(catChanges)
+
+ggplot(shark, aes(x=exchangeForStake)) + geom_histogram(color='black',fill='darkblue')+ggtitle("Histogram of the percentage of equity entrepreneurs are willing to share with shark")+labs(y='count',x='percentage of equity shared')
+#entrepreneurs shares in general less 50% than equity
+
+ggplot(shark, aes(x=valuation)) + geom_histogram(color='black',fill='darkblue')+ggtitle("Histogram of the valuation of entrepreneurs' company")+labs(y='count',x='valuation of companies')
+
+ggplot(shark, aes(x=season)) + geom_histogram(color='black',fill='darkblue')+ggtitle("Histogram of number of seasons")+labs(y='count',x='number of seasons')
+
+ggplot(shark, aes(x=still.open)) + geom_histogram(color='black',fill='darkblue',stat ='count' )+ggtitle("Histogram of number of businesses still in the market")+labs(y='count',x='number of businesses still openned')
+
+ggplot(shark, aes(x=investment.received)) + geom_histogram(color='black',fill='darkblue',stat ='count' )+ggtitle("Histogram of amount of investment received by the sharks")+labs(y='count',x='amount of investment received')
+
+ggplot(shark, aes(x=implied.valuation)) + geom_histogram(color='black',fill='darkblue',stat ='count' )+ggtitle("Histogram of amount of implied valuation")+labs(y='count',x='amount of implied valuation')
+
+
+######collinearity
+
+library(psych)
+
+quantvars = shark[,c(3,4,10,11,12,13,14,15,26,27,28,29,30,31)]
+
+pairs.panels(quantvars)
+
+#below are variables which are highly collinear
+#askedfor and investment recieved 
+#inexchnage for and implied valuation 
+#episode and implied valuation
+
+###Correlation coefficient to chcek for linearity
+# install.packages("corrplot")
+# 
+# library(corrplot)
+# 
+# #conversion to matrix for corrplot to work 
+# 
+# shark_m = as.matrix(shark)
+# 
+# corrplot(shark_m, type="upper", order="hclust", sig.level = 0.01, insig = "blank")
+# #
+
+#RANDOM FOREST
+# library(tree)
+# library(rpart)
+# library(rpart.plot)
+# 
+# rf=rpart(deal~episode+category+gender+location+askedFor+exchangeForStake+valuation+season+episode.season+still.open+investment.received+in.exchange.for+implied.valuation, cp=0.01)
+# 
+# summary(rf)
+# 
+# 
+# mylargetree$cptable[which.min(mylargetree$cptable[,"xerror"]),"CP"]
+# 
+# 
+# 
+# #tree with existing features
+# 
+# mytree=rpart(deal~episode+category+gender+location+askedFor+exchangeForStake+valuation+season+year+gdp_growth+still.open+investment.received+in.exchange.for+implied.valuation+dif_investment+dif_equity+dif_valuation,control=rpart.control(cp=0.000000001))
+# 
+# rpart.plot(mytree)
+# 
+# #calculation best cp value
+# mytree$cptable[which.min(mytree$cptable[,"xerror"]),"CP"] 
+# 
+# #new tree with cp 0.000978
+# mytree_new=rpart(deal~episode+category+gender+location+askedFor+exchangeForStake+valuation+season+year+gdp_growth+still.open+investment.received+in.exchange.for+implied.valuation+dif_investment+dif_equity+dif_valuation,control=rpart.control(cp=0.000978))
+# 
+# rpart.plot(mytree_new)
+# #if the investment received by the entrepreneurs is less than 12K then 49%\
+# #????
+# 
+# #random forest feature selection
+# library(randomForest)
+# 
+# #omitting nulls, if any, before random forest model 
+# shark <- na.omit(shark)
+# 
+# 
+# #H
+# myforest_t = randomForest(deal~episode+category+gender+location+askedFor+exchangeForStake+valuation+season+year+gdp_growth+still.open+investment.received+in.exchange.for+implied.valuation+dif_investment+dif_equity+dif_valuation,ntree=10000,data=shark,do.trace=1000,importance=TRUE)
+# 
+# #I
+# 
+# myforest_t
+# varImpPlot(myforest_t)
+
+
+######PCA - for correlated 
+#non - dummified - involving everything 
+#####################################################
+survival = as.factor(still.open)
+table(still.open)
+attach(shark)
+
+shark$survival=ifelse(still.open=="Yes",1,0)
+attach(shark)
+
+vars = shark[,c(3,4,9,13,14,15,16,26,27,28,29,30)]
+
+#G
+pca = prcomp(vars,scale=TRUE)
+
+pca
+
+#I
+install.packages("ggplot2")
+install.packages("ggfortify")
+library(ggplot2)
+library(ggfortify)
+
+autoplot(pca, data = vars, loadings = TRUE, loadings.label = TRUE,col=ifelse(vars$survival==1,"blue","pink"))
+
+
+# ######PCA - for correlated 
+# #dummified one
+# #dropping categorical columns - involving everything 
+# #####################################################
+# library(dplyr)
+# shark_data <- shark
+# 
+# shark_data = select(shark_data,-c(2,5,6,7,8,9,14,15,16,17,18,19,20,21,22,23))
+# 
+# #G
+# pca = prcomp(shark_data,scale=TRUE)
+# 
+# pca
+# 
+# #I
+# install.packages("ggplot2")
+# install.packages("ggfortify")
+# library(ggplot2)
+# library(ggfortify)
+# 
+# autoplot(pca, data = shark_data, loadings = TRUE, loadings.label = TRUE,col=ifelse(shark_data$deal=="TRUE","blue","pink"))
+
+####PCA 
+######only with state
+#################################################
+
+
+shark_state = read.csv("C:/Users/bhavv/OneDrive/Desktop/MMA2/Multivariate Statcl Analysis- Juan Serpa/FINAL PROJECT-SHARK TANK/SharkTank_Dataset_new-catChanges-statedummy.csv")
+
+attach(shark_state)
+
+survival = as.factor(still.open)
+table(still.open)
+
+shark_state$survival=ifelse(still.open=="Yes",1,0)
+attach(shark_state)
+
+library(dplyr)
+shark_data_l <- shark_state
+
+#removing cat variables 
+shark_data_l = select(shark_data_l,-c(1,2,5,6,7,8,10,11,12,17,18,19,20,21,22,23,24,25,27))
+
+#G
+pca = prcomp(shark_data_l,scale=TRUE)
+
+pca
+
+
+autoplot(pca, data = shark_data_l, loadings = TRUE, loadings.label = TRUE,col=ifelse(shark_data_l$survival==1,"blue","pink"))
+
+
+# ####PCA 
+# ######only with categories 
+# #################################################
+# 
+# library(dplyr)
+# shark_data_s <- shark
+# 
+# shark_data_s = select(shark_data_s,-c(2,5,6,7,8,9,14,15,16,17,18,19,20,21,22,23))
+# shark_data_s = select(shark_data_s,-starts_with("state"))
+# 
+# 
+# #G
+# pca = prcomp(shark_data_s,scale=TRUE)
+# 
+# pca
+# 
+# #I
+# install.packages("ggplot2")
+# install.packages("ggfortify")
+# library(ggplot2)
+# library(ggfortify)
+# 
+# autoplot(pca, data = shark_data_s, loadings = TRUE, loadings.label = TRUE,col=ifelse(shark_data_s$deal=="TRUE","blue","pink"))
+# 
+
+
+#################################################################################################################################################PCA - for correlated 
+#dropping categorical columns - with only category changed column
+###########################################################################
+shark_catChanges = read.csv("C:/Users/bhavv/OneDrive/Desktop/MMA2/Multivariate Statcl Analysis- Juan Serpa/FINAL PROJECT-SHARK TANK/SharkTank_Dataset_new-catChanges-df.csv")
+
+attach(shark_catChanges)
+
+survival = as.factor(still.open)
+table(still.open)
+
+shark_catChanges$survival=ifelse(still.open=="Yes",1,0)
+attach(shark_catChanges)
+
+library(dplyr)
+shark_data_c <- shark_catChanges
+
+#keeping numerical data and removing categorical columns
+shark_data_c = select(shark_data_c,-c(1,2,5,6,7,9,10,11,14,16,17,18,19,20,21,22,23,24,25,27))
+
+#G
+pca = prcomp(shark_data_c,scale=TRUE)
+
+pca
+
+#I
+install.packages("ggplot2")
+install.packages("ggfortify")
+library(ggplot2)
+library(ggfortify)
+
+autoplot(pca, data = shark_data_c, loadings = TRUE, loadings.label = TRUE,col=ifelse(shark_data_c$survival==1,"blue","pink"))
+
+
+
+
+
+
+
+
+
